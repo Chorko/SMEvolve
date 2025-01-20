@@ -28,6 +28,7 @@ Key focus areas of SMEvolve:
 ## Tech Stack
 - **Frontend**: React.js
 - **Backend**: Node.js with Express.js
+- **Framework**:Flask
 - **Database**: MongoDB
 - **AI Libraries**: scikit-learn, TensorFlow, NLTK
 - **API KEYS**: GEMENI, TOM-TOM 
