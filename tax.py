@@ -1,5 +1,3 @@
-
-
 from bson import ObjectId  # Import ObjectId from bson
 import pymongo
 import requests
@@ -20,8 +18,10 @@ def chatbot_interface():
         print("1. Add User Inputs")
         print("2. Modify User Inputs")
         print("3. Analyze Data with AI")
-        print("4. List All Records")
-        print("5. Exit")
+        print("4. Ask Custom AI Prompt")
+        print("5. Perform Market & Competitor Analysis")
+        print("6. List All Records")
+        print("7. Exit")
 
         choice = input("Select an option by typing the number: ").strip()
 
@@ -32,12 +32,16 @@ def chatbot_interface():
         elif choice == "3":
             analyze_data_with_ai_chatbot()
         elif choice == "4":
-            list_all_records()
+            ask_custom_ai_prompt()
         elif choice == "5":
+            market_and_competitor_analysis()
+        elif choice == "6":
+            list_all_records()
+        elif choice == "7":
             print("Goodbye! Have a great day!")
             break
         else:
-            print("\nInvalid input. Please select a valid option (1-5).")
+            print("\nInvalid input. Please select a valid option (1-7).")
 
 def add_user_inputs_chatbot():
     print("\nGreat! Let's add some details about your business.")
@@ -91,24 +95,6 @@ def analyze_data_with_ai_chatbot():
             return
 
         # Generate a contextual search query
-        # query = {
-        #     "contents": [
-        #         {
-        #             "parts": [
-        #                 {
-        #                     "text": (
-        #                         f"Find possible tax waivers for a {user_data['business_sector']} business in "
-        #                         f"{user_data['state']} with an annual turnover of ₹{user_data['annual_turnover']}, "
-        #                         f"availing {'no' if user_data['subsidies'] == 'no' else 'some'} subsidies. "
-        #                         f"Additionally, calculate the approximate amount this business can save "
-        #                         f"under these waivers and provide a guaranteed reply with an estimated savings amount."
-        #                     )
-        #                 }
-        #             ]
-        #         }
-        #     ]
-        # }
-
         query = {
             "contents": [{"parts": [{"text": (
                 f"Analyze tax waivers for {user_data['business_sector']} in {user_data['state']} "
@@ -146,6 +132,66 @@ def analyze_data_with_ai_chatbot():
         print(f"Oops! Something went wrong while communicating with the AI: {e}")
     except Exception as e:
         print(f"Error: {e}")
+
+def ask_custom_ai_prompt():
+    custom_prompt = input("\nEnter your custom prompt for AI analysis: ")
+    try:
+        query = {
+            "contents": [{"parts": [{"text": custom_prompt}]}]
+        }
+
+        headers = {"Content-Type": "application/json"}
+        response = requests.post(API_URL, json=query, headers=headers)
+        response.raise_for_status()
+
+        suggestions = response.json().get("candidates", [])
+
+        print("\nAI Response to your custom prompt:")
+        if suggestions:
+            for suggestion in suggestions:
+                print(f"- {suggestion}")
+        else:
+            print("No suggestions available. Please try again later.")
+    except requests.exceptions.RequestException as e:
+        print(f"Oops! Something went wrong while communicating with the AI: {e}")
+    except Exception as e:
+        print(f"Error: {e}")
+
+def market_and_competitor_analysis():
+    user_id = input("\nPlease provide the ID of the user record you want to analyze: ")
+    try:
+        user_data = collection.find_one({"_id": ObjectId(user_id)})
+
+        if not user_data:
+            print("Sorry, no data found for the given ID.")
+            return
+
+        business_sector = user_data['business_sector']
+        print(f"\nAnalyzing market trends and competitors in the {business_sector} sector...")
+
+        # Placeholder for market trend analysis and competitor research
+        trends_query = f"Fetch trending hashtags and market insights for {business_sector} from social media."
+        competitors_query = f"Provide a competitor analysis for {business_sector} in the current market."
+
+        # For market analysis (social media trends related to the business sector)
+        market_trends = ask_gemini(trends_query)
+        print("\nMarket Trends based on social media data:")
+        print(market_trends)
+
+        # For competitor analysis (similar businesses in the sector)
+        competitor_analysis = ask_gemini(competitors_query)
+        print("\nCompetitor Analysis:")
+        print(competitor_analysis)
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+def ask_gemini(query):
+    headers = {"Content-Type": "application/json"}
+    response = requests.post(API_URL, json={"contents": [{"parts": [{"text": query}]}]}, headers=headers)
+    if response.status_code == 200:
+        return response.json().get("candidates", "No suggestions available.")
+    return "Error fetching data from Gemini API."
 
 def list_all_records():
     print("\nHere are all the records in the database:")
